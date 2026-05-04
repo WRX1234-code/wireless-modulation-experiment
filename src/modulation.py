@@ -43,9 +43,38 @@ def bpsk_modulate(bits):
     # 方法3: 使用字典映射
     
     # 你的代码：
-    raise NotImplementedError("请实现BPSK调制函数")
+    symbols = 1 - 2 *bits
     
-    # return symbols
+    # 转换为复数类型（统一接口）
+    symbols = symbols.astype(np.complex128)
+    # 检查输入长度
+    if len(bits) % 2 != 0:
+       raise ValueError("QPSK要求比特序列长度为偶数")
+   
+   # 将比特序列reshape成(N/2, 2)，每行是一对比特
+    bit_pairs = bits.reshape(-1, 2)
+   
+   # 将每对比特转换为十进制索引：00→0, 01→1, 10→2, 11→3
+   # 第一列是高位(MSB)，第二列是低位(LSB)
+    indices = bit_pairs[:, 0] * 2 + bit_pairs[:, 1]
+   
+   # 格雷码映射对应的复数符号（未归一化）
+   # 00(0) →  1+1j
+   # 01(1) → -1+1j
+   # 11(3) → -1-1j
+   # 10(2) →  1-1j
+    mapping = np.array([1+1j, -1+1j, 1-1j, -1-1j], dtype=np.complex128)
+   
+   # 根据索引获取对应的符号
+    symbols = mapping[indices]
+   
+   # 归一化：除以√2，使符号功率为1
+    symbols = symbols / np.sqrt(2)
+   
+    
+    #raise NotImplementedError("请实现QPSK调制函数")
+    
+    return symbols
 
 
 def qpsk_modulate(bits):
@@ -91,9 +120,25 @@ def qpsk_modulate(bits):
     # 3. 别忘了归一化：除以√2使符号功率为1
     
     # 你的代码：
-    raise NotImplementedError("请实现QPSK调制函数")
+     
+    # 将比特序列reshape成(N/2, 2)，每行是一对比特
+    bit_pairs = bits.reshape(-1, 2)
     
-    # return symbols
+    # 将每对比特转换为十进制索引：00→0, 01→1, 10→2, 11→3
+    indices = bit_pairs[:, 0] * 2 + bit_pairs[:, 1]
+    
+    # 格雷码映射对应的复数符号（未归一化）
+    mapping = np.array([1+1j, -1+1j, 1-1j, -1-1j], dtype=np.complex128)
+    
+    # 根据索引获取对应的符号
+    symbols = mapping[indices]
+    
+    # 归一化：除以√2，使符号功率为1
+    symbols = symbols / np.sqrt(2)
+
+    #raise NotImplementedError("请实现QPSK调制函数")
+    
+    return symbols
 
 
 def qam16_modulate(bits):
@@ -152,9 +197,42 @@ def qam16_modulate(bits):
     }
     
     # 你的代码：
-    raise NotImplementedError("请实现16-QAM调制函数")
+    # 检查输入长度
     
-    # return symbols
+    
+    # 将比特序列reshape成(N/4, 4)
+    bit_groups = bits.reshape(-1, 4)
+    
+    
+    # 格雷码映射：00→+3, 01→+1, 11→-1, 10→-3
+    gray_map = {
+        
+(0, 0): 3,
+        
+(0, 1): 1,
+        
+(1, 1): -1,
+        
+(1, 0): -3
+    
+}
+    
+    
+# 前2位决定I分量（实部），后2位决定Q分量（虚部）
+    I_values = np.array([gray_map[tuple(pair)] for pair in bit_groups[:, :2]])
+    Q_values = np.array([gray_map[tuple(pair)] for pair in bit_groups[:, 2:]])
+    
+    
+# 组合成复数符号
+    symbols = I_values + 1j * Q_values
+    
+    
+# 归一化：除以√10使平均功率为1
+    symbols = symbols / np.sqrt(10)
+ 
+    #raise NotImplementedError("请实现16-QAM调制函数")
+    
+    return symbols
 
 
 def test_modulation():
